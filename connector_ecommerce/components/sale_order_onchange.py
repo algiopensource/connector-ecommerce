@@ -3,10 +3,13 @@
 # © 2016 Camptocamp SA
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html)
 
-from odoo.addons.connector.connector import ConnectorUnit
+from odoo.addons.component.core import Component
 
 
-class OnChangeManager(ConnectorUnit):
+class OnChangeManager(Component):
+
+    _name = 'ecommerce.onchange.manager'
+    _inherit = 'base.connector'
 
     def get_new_values(self, record, on_change_result, model=None):
         vals = on_change_result.get('value', {})
@@ -47,8 +50,11 @@ class OnChangeManager(ConnectorUnit):
         return res
 
 
-class SaleOrderOnChange(OnChangeManager):
-    _model_name = None
+class SaleOrderOnChange(Component):
+
+    _name = 'ecommerce.onchange.manager.sale.order'
+    _inherit = 'ecommerce.onchange.manager'
+    _usage = 'ecommerce.onchange.manager.sale.order'
 
     order_onchange_fields = [
         'partner_id',

@@ -3,10 +3,10 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html)
 
 from odoo import models
-from odoo.addons.connector.connector import ConnectorUnit
+from odoo.addons.component.core import Component
 
 
-class SpecialOrderLineBuilder(ConnectorUnit):
+class SpecialOrderLineBuilder(Component):
     """ Base class to build a sales order line for a sales order
 
     Used when extra order lines have to be added in a sales order
@@ -17,16 +17,18 @@ class SpecialOrderLineBuilder(ConnectorUnit):
 
     Usage::
 
-        builder = self.get_connector_for_unit(ShippingLineBuilder,
-                                              model='sale.order.line')
+        builder = self.components(usage='shipping.line.builder',
+                                  model_name='sale.order.line')
         builder.price_unit = 100
         builder.get_line()
 
     """
-    _model_name = None
+    _name = 'ecommerce.order.line.builder'
+    _inherit = 'base.connector'
+    _usage = 'order.line.builder'
 
-    def __init__(self, connector_env):
-        super(SpecialOrderLineBuilder, self).__init__(connector_env)
+    def __init__(self, work_context):
+        super(SpecialOrderLineBuilder, self).__init__(work_context)
         self.product = None  # id or browse_record
         # when no product_id, fallback to a product_ref
         self.product_ref = None  # tuple (module, xmlid)
@@ -53,33 +55,47 @@ class SpecialOrderLineBuilder(ConnectorUnit):
                 'sequence': self.sequence}
 
 
-class ShippingLineBuilder(SpecialOrderLineBuilder):
+class ShippingLineBuilder(Component):
     """ Return values for a Shipping line """
-    _model_name = None
 
-    def __init__(self, connector_env):
-        super(ShippingLineBuilder, self).__init__(connector_env)
+    _name = 'ecommerce.order.line.builder.shipping'
+    _inherit = 'ecommerce.order.line.builder'
+    _usage = 'order.line.builder.shipping'
+
+    def __init__(self, work_context):
+        super(ShippingLineBuilder, self).__init__(work_context)
         self.product_ref = ('connector_ecommerce', 'product_product_shipping')
         self.sequence = 999
 
+    def get_line(self):
+        values = super(ShippingLineBuilder, self).get_line()
+        values['is_delivery'] = True
+        return values
 
-class CashOnDeliveryLineBuilder(SpecialOrderLineBuilder):
+
+class CashOnDeliveryLineBuilder(Component):
     """ Return values for a Cash on Delivery line """
-    _model_name = None
 
-    def __init__(self, connector_env):
-        super(CashOnDeliveryLineBuilder, self).__init__(connector_env)
+    _name = 'ecommerce.order.line.builder.cod'
+    _inherit = 'ecommerce.order.line.builder'
+    _usage = 'order.line.builder.cod'
+
+    def __init__(self, work_context):
+        super(CashOnDeliveryLineBuilder, self).__init__(work_context)
         self.product_ref = ('connector_ecommerce',
                             'product_product_cash_on_delivery')
         self.sequence = 995
 
 
-class GiftOrderLineBuilder(SpecialOrderLineBuilder):
+class GiftOrderLineBuilder(Component):
     """ Return values for a Gift line """
-    _model_name = None
 
-    def __init__(self, connector_env):
-        super(GiftOrderLineBuilder, self).__init__(connector_env)
+    _name = 'ecommerce.order.line.builder.gift'
+    _inherit = 'ecommerce.order.line.builder'
+    _usage = 'order.line.builder.gift'
+
+    def __init__(self, work_context):
+        super(GiftOrderLineBuilder, self).__init__(work_context)
         self.product_ref = ('connector_ecommerce',
                             'product_product_gift')
         self.sign = -1
